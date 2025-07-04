@@ -13,7 +13,7 @@ SOURCE_CHAT_ID = -1002579718516
 TARGET_CHANNEL_ID = -1002077476891
 
 # Daftar user_id yang diizinkan
-ALLOWED_USERS = [7745070536, 6886313636]
+ALLOWED_USERS = [7745070536, 6886313636, 1718105015]
 
 app = Client("auto_forward_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
@@ -86,41 +86,6 @@ async def unpin_all(client: Client, message: Message):
         await message.reply("📍 Semua pesan berhasil di-unpin.")
     except Exception as e:
         await message.reply(f"❌ Gagal melakukan unpin:\n`{e}`")
-
-# Tambahkan admin ke channel dengan user_id
-@app.on_message(filters.command("add") & filters.private)
-@app.on_message(filters.command("addadmin") & filters.private)
-async def add_admin(client: Client, message: Message):
-    user_id = message.from_user.id if message.from_user else None
-
-    if not user_id or not is_authorized(user_id):
-        await message.reply("❌ Kamu tidak punya izin untuk menambahkan admin.")
-        return
-
-    parts = message.text.split()
-    if len(parts) != 2 or not parts[1].isdigit():
-        await message.reply("⚠️ Format salah. Gunakan: `/addadmin <user_id>`")
-        return
-
-    target_user_id = int(parts[1])
-
-    try:
-        await client.promote_chat_member(
-            chat_id=TARGET_CHANNEL_ID,
-            user_id=target_user_id,
-            privileges=ChatPrivileges(
-                can_manage_chat=True,
-                can_post_messages=True,
-                can_edit_messages=True,
-                can_delete_messages=True,
-                can_invite_users=True,
-                can_pin_messages=True,
-                can_promote_members=False
-            )
-        )
-        await message.reply(f"✅ User `{target_user_id}` berhasil diangkat sebagai admin.")
-    except Exception as e:
-        await message.reply(f"❌ Gagal mengangkat admin:\n`{e}`")
-        
+ 
 print("Bot aktif: auto-forward, hapus, pin, dan unpin...")
 app.run()
