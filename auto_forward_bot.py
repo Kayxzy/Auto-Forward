@@ -1,5 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
+import re
 
 # Konfigurasi bot
 API_ID = 28657860
@@ -15,37 +16,33 @@ ALLOWED_USERS = [7745070536, 6886313636]
 
 app = Client("auto_forward_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Fungsi untuk memeriksa izin akses
 def is_authorized(user_id: int) -> bool:
     return user_id in ALLOWED_USERS
 
-# Auto-forward pesan dari grup ke channel (hanya oleh admin)
+# Auto-forward pesan dari grup ke channel
 @app.on_message(filters.chat(SOURCE_CHAT_ID))
 async def forward_to_channel(client: Client, message: Message):
     user_id = message.from_user.id if message.from_user else None
-
     if not user_id or not is_authorized(user_id):
         print(f"Akses ditolak untuk user_id: {user_id}")
         return
-
     try:
         await message.copy(TARGET_CHANNEL_ID)
         print(f"Pesan dari user {user_id} diteruskan ke channel.")
     except Exception as e:
         print(f"Error meneruskan pesan: {e}")
 
-# Perintah untuk menghapus pesan dari channel
+# Hapus pesan berdasarkan message_id
 @app.on_message(filters.command("d") & filters.private)
 async def delete_message(client: Client, message: Message):
     user_id = message.from_user.id if message.from_user else None
-
     if not user_id or not is_authorized(user_id):
         await message.reply("❌ Kamu tidak punya izin untuk menghapus pesan.")
         return
 
     parts = message.text.split()
     if len(parts) != 2 or not parts[1].isdigit():
-        await message.reply("⚠️ Format salah. Gunakan: `/hapus <message_id>`", quote=True)
+        await message.reply("⚠️ Format salah. Gunakan: `/d <message_id>`", quote=True)
         return
 
     msg_id = int(parts[1])
@@ -55,5 +52,39 @@ async def delete_message(client: Client, message: Message):
     except Exception as e:
         await message.reply(f"❌ Gagal menghapus pesan:\n`{e}`")
 
-print("Bot aktif: auto-forward & hapus pesan admin...")
+# Pin pesan berdasarkan message_id
+@app.on_message(filters.command("pin") & filters.private)
+async def pin_message(client: Client, message: Message):
+    user_id = message.from_user.id if message.from_user else None
+    if not user_id or not is_authorized(user_id):
+        await message.reply("❌ Kamu tidak punya izin untuk pin pesan.")
+        return
+
+    parts = message.text.split()
+    if len(parts) != 2 or not parts[1].isdigit():
+        await message.reply("⚠️ Format salah. Gunakan: `/pin <message_id>`", quote=True)
+        return
+
+    msg_id = int(parts[1])
+    try:
+        await client.pin_chat_message(chat_id=TARGET_CHANNEL_ID, message_id=msg_id, disable_notification=True)
+        await message.reply(f"📌 Pesan dengan ID `{msg_id}` berhasil dipin.")
+    except Exception as e:
+        await message.reply(f"❌ Gagal melakukan pin pesan:\n`{e}`")
+
+# Unpin semua pesan di channel
+@app.on_message(filters.command("unpin") & filters.private)
+async def unpin_all(client: Client, message: Message):
+    user_id = message.from_user.id if message.from_user else None
+    if not user_id or not is_authorized(user_id):
+        await message.reply("❌ Kamu tidak punya izin untuk unpin.")
+        return
+
+    try:
+        await client.unpin_all_chat_messages(chat_id=TARGET_CHANNEL_ID)
+        await message.reply("📍 Semua pesan berhasil di-unpin.")
+    except Exception as e:
+        await message.reply(f"❌ Gagal melakukan unpin:\n`{e}`")
+
+print("Bot aktif: auto-forward, hapus, pin, dan unpin...")
 app.run()
