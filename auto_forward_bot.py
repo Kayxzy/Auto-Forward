@@ -35,7 +35,7 @@ async def forward_to_channel(client: Client, message: Message):
         print(f"Error meneruskan pesan: {e}")
 
 # Perintah untuk menghapus pesan dari channel
-@app.on_message(filters.command("hapus") & filters.private)
+@app.on_message(filters.command("d") & filters.private)
 async def delete_message(client: Client, message: Message):
     user_id = message.from_user.id if message.from_user else None
 
