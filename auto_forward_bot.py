@@ -75,17 +75,23 @@ async def pin_message(client: Client, message: Message):
 
 # Unpin semua pesan di channel
 @app.on_message(filters.command("unpin") & filters.private)
-async def unpin_all(client: Client, message: Message):
+async def unpin_specific(client: Client, message: Message):
     user_id = message.from_user.id if message.from_user else None
     if not user_id or not is_authorized(user_id):
         await message.reply("❌ Kamu tidak punya izin untuk unpin.")
         return
 
+    parts = message.text.split()
+    if len(parts) != 2 or not parts[1].isdigit():
+        await message.reply("⚠️ Format salah. Gunakan: `/unpin <message_id>`", quote=True)
+        return
+
+    msg_id = int(parts[1])
     try:
-        await client.unpin_all_chat_messages(chat_id=TARGET_CHANNEL_ID)
-        await message.reply("📍 Semua pesan berhasil di-unpin.")
+        await client.unpin_chat_message(chat_id=TARGET_CHANNEL_ID, message_id=msg_id)
+        await message.reply(f"📍 Pesan dengan ID `{msg_id}` berhasil di-unpin.")
     except Exception as e:
         await message.reply(f"❌ Gagal melakukan unpin:\n`{e}`")
- 
+        
 print("Bot aktif: auto-forward, hapus, pin, dan unpin...")
 app.run()
