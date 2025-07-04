@@ -1,5 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.types import ChatPrivileges
 import re
 
 # Konfigurasi bot
